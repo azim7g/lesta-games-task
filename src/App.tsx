@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import './App.css';
 import { gql, useQuery } from '@apollo/client';
 import { Skeleton } from './components/ui/skeleton';
 import { Card, CardContent } from './components/ui/card';
