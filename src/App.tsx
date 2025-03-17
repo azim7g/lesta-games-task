@@ -72,8 +72,36 @@ type TQueryResponse = {
   vehicles: IVehicle[];
 };
 
+const generateEnums = (vehicles: IVehicle[] = []) => {
+  const enums = vehicles.reduce<{
+    levels: number[];
+    types: string[];
+    nations: string[];
+  }>(
+    (acc, el) => {
+      return {
+        levels: [...acc.levels, el.level],
+        types: [...acc.types, el.type.title],
+        nations: [...acc.nations, el.nation.title],
+      };
+    },
+    {
+      levels: [],
+      types: [],
+      nations: [],
+    }
+  );
+
+  return {
+    levels: Array.from(new Set(enums.levels)).sort(),
+    types: Array.from(new Set(enums.types)),
+    nations: Array.from(new Set(enums.nations)),
+  };
+};
+
 function App() {
   const { data, loading, error } = useQuery<TQueryResponse>(GET_VEHICLES);
+
   const [tier, setTier] = useState('');
   const [nation, setNation] = useState('');
   const [type, setType] = useState('');
@@ -90,19 +118,20 @@ function App() {
       (!type || ship.type?.title === type)
   );
 
+  const enums = generateEnums(ships);
   return (
     <div className="p-6">
-      <div className="flex flex-wrap gap-4 mb-6">
+      <div className="flex gap-4 mb-6">
         <Select onValueChange={(value) => setTier(value === 'none' ? '' : value)} value={tier}>
           <SelectTrigger>
             <SelectValue placeholder="Все уровни" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Все уровни</SelectItem>
-            {[...Array(10)].map((_, i) => {
+            {enums.levels.map((level) => {
               return (
-                <SelectItem key={i} value={(i + 1).toString()}>
-                  Уровень {i + 1}
+                <SelectItem key={level} value={level.toString()}>
+                  Уровень {level}
                 </SelectItem>
               );
             })}
@@ -114,13 +143,11 @@ function App() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Все нации</SelectItem>
-            {[...new Set(ships.map((s: IVehicle) => s.nation?.title).filter(Boolean))].map(
-              (nation) => (
-                <SelectItem key={nation} value={nation}>
-                  {nation}
-                </SelectItem>
-              )
-            )}
+            {enums.nations.map((nation) => (
+              <SelectItem key={nation} value={nation}>
+                {nation}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select onValueChange={(value) => setType(value === 'none' ? '' : value)} value={type}>
@@ -129,7 +156,7 @@ function App() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Все классы</SelectItem>
-            {[...new Set(ships.map((s: IVehicle) => s.type?.title).filter(Boolean))].map((type) => (
+            {enums.types.map((type) => (
               <SelectItem key={type} value={type}>
                 {type}
               </SelectItem>
@@ -152,10 +179,10 @@ function App() {
                   <Skeleton className="w-full h-40" />
                 )}
                 <h2 className="text-lg font-bold mt-2">{ship.title}</h2>
-                <p className="text-sm">{ship.description}</p>
+                {/* <p className="text-sm">{ship.description}</p> */}
                 <p className="text-xs text-gray-500">Уровень: {ship.level}</p>
-                <p className="text-xs" style={{ color: ship.nation?.color }}>
-                  {ship.nation?.title || 'Неизвестная нация'}
+                <p className="text-xs" style={{ color: ship.nation.color }}>
+                  {ship.nation.title}
                 </p>
               </CardContent>
             </Card>
